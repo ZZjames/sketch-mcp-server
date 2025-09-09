@@ -1,0 +1,208 @@
+# Sketch MCP Server Tool Usage Guide
+
+**🚨 Must strictly follow the step-by-step process, do not skip steps to generate code directly!**
+
+## 📋 Basic Workflow
+1. **Load File** - `loadSketchByPath`
+2. **Get Structure** - `getDocumentStructure` or `getNodesSummary`
+3. **Get Details as Needed** - Choose appropriate tools
+4. **Generate Code** - Based on real data
+
+## 🛠️ Core Tools
+
+### 📁 File Loading
+- `loadSketchByPath` - Load Sketch file
+- `loadSketchByConfig` - Load configuration object
+
+### 📊 Document Structure
+- `getDocumentStructure` - Get document structure (🚀 Optimized)
+- `getPageStructure` - Get page structure
+- `listPages` - List all pages
+
+### 🎯 Node Query
+- `getNodesSummary` - Smart summary (🚀 New, 80-90% Token reduction)
+- `listNodes` - List nodes
+- `listNodesByPage` - List nodes by page
+- `findNodesByName` - Find by name
+
+### 🔍 Detailed Information
+- `getNodeInfo` - Single node information
+- `getMultipleNodeInfo` - Batch node information
+- `getNodePosition` - Node position
+
+### 🔄 Symbol Components
+- `getSymbolMasters` - All Symbol Masters
+- `getSymbolInstances` - All Symbol Instances
+- `getSymbolMasterBySymbolID` - Find by ID
+- `getSymbolInstanceStyles` - Instance styles
+
+### 🎨 Visualization
+- `renderNodeAsBase64` - Render as image
+
+## 🚀 Token Optimization Strategy
+
+### Data Volume Comparison
+| Tool/Mode | Token Reduction | Use Case |
+|-----------|----------------|----------|
+| `getNodesSummary` | 80-90% | Initial analysis |
+| `getDocumentStructure`(summary) | 70-85% | Quick overview |
+| `getDocumentStructure`(filtered) | 30-50% | Structure analysis |
+
+### Recommended Workflow
+
+**Phase 1: Quick Analysis (Highly Recommended)**
+```json
+{
+  "name": "getNodesSummary",
+  "arguments": {
+    "groupBy": "type",
+    "includeStats": true,
+    "maxSamples": 3
+  }
+}
+```
+
+**Phase 2: Structure Analysis (As Needed)**
+```json
+{
+  "name": "getDocumentStructure",
+  "arguments": {
+    "fields": ["id", "name", "type", "children"],
+    "maxDepth": 2
+  }
+}
+```
+
+**Phase 3: Detailed Information (As Needed)**
+```json
+{
+  "name": "getMultipleNodeInfo",
+  "arguments": {
+    "nodeIds": ["key-node-ID"]
+  }
+}
+```
+
+## 📝 Complete Example
+
+### Step 1: Load File
+```json
+{
+  "name": "loadSketchByPath",
+  "arguments": {
+    "path": "/path/to/sketch/file.sketch"
+  }
+}
+```
+
+### Step 2: Quick Analysis
+```json
+{
+  "name": "getNodesSummary",
+  "arguments": {
+    "groupBy": "type",
+    "includeStats": true,
+    "maxSamples": 5
+  }
+}
+```
+
+**Return Example**:
+```json
+{
+  "totalPages": 2,
+  "totalNodes": 305,
+  "groups": {
+    "text": { "count": 45, "samples": [...] },
+    "rectangle": { "count": 26, "samples": [...] },
+    "symbolMaster": { "count": 16, "samples": [...] }
+  },
+  "statistics": {
+    "largestGroup": { "key": "text", "percentage": "14.8%" }
+  }
+}
+```
+
+### Step 3: Get as Needed
+
+**Case A: Specific Type Nodes**
+```json
+{
+  "name": "listNodes",
+  "arguments": {
+    "type": "text",
+    "limit": 10
+  }
+}
+```
+
+**Case B: Symbol Components**
+```json
+{
+  "name": "getSymbolMasters",
+  "arguments": {}
+}
+```
+
+**Case C: Visual Effects**
+```json
+{
+  "name": "renderNodeAsBase64",
+  "arguments": {
+    "nodeId": "button-node-ID",
+    "format": "svg"
+  }
+}
+```
+
+### Step 4: Generate Vue Component
+Generate code based on real data
+
+## 🎯 Tool Selection Guide
+
+| Need | Recommended Tool | Token Efficiency |
+|------|------------------|------------------|
+| Overall structure | `getNodesSummary` | ⭐⭐⭐⭐⭐ |
+| Page hierarchy | `getDocumentStructure`(filtered) | ⭐⭐⭐⭐ |
+| Find nodes | `findNodesByName` | ⭐⭐⭐ |
+| Detailed info | `getMultipleNodeInfo` | ⭐⭐ |
+| Symbol components | `getSymbolMasters` | ⭐⭐⭐ |
+| Visualization | `renderNodeAsBase64` | ⭐⭐ |
+
+## ⚠️ Important Notes
+
+### 🚫 Strictly Prohibited
+- Skip loading steps
+- Use fake data
+- Ignore Token optimization
+
+### ✅ Best Practices
+- Prioritize summary tools
+- Get detailed information as needed
+- Use field filtering wisely
+- Leverage Symbol tools
+- Use visualization when appropriate
+
+### 🔧 Optimization Parameters
+
+**getDocumentStructure optimization**:
+- `summaryMode`: true - Summary mode
+- `fields`: ["id", "name", "type"] - Specify fields
+- `excludeFields`: ["style", "position"] - Exclude fields
+- `maxDepth`: 2 - Limit depth
+
+**getNodesSummary parameters**:
+- `groupBy`: "type"|"style"|"position"|"size"
+- `includeStats`: Statistical analysis
+- `maxSamples`: Samples per group
+- `pageId`: Limit to page
+
+## 🎉 Summary
+
+By using tools and Token optimization features wisely:
+- Reduce API costs (up to 90%)
+- Improve analysis efficiency
+- Get precise data
+- Generate high-quality code
+
+**Core Principle: Smart tool selection, optimize Token usage, generate code based on real data!**

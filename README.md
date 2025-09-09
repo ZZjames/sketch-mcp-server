@@ -253,7 +253,7 @@ npm run release:dry    # Simulate release process
 
 ## 📚 API Reference
 
-For detailed API documentation, please refer to [Tool Usage Guide](./mcp-prompt.txt).
+For detailed API documentation, please refer to [Tool Usage Guide](./mcp-prompt.en.txt).
 
 ### Development Standards
 
@@ -274,7 +274,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 If you encounter any issues or have questions, please:
 
-1. Check the [documentation](./mcp-prompt.txt)
+1. Check the [documentation](./mcp-prompt.en.txt)
 2. Search existing [issues](https://github.com/mater1996/sketch-mcp-server/issues)
 3. Create a new issue if needed
 
