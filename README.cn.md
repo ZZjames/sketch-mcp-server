@@ -261,3 +261,19 @@ npm run release:dry    # 模拟发布流程
 - 遵循现有的代码风格
 - 为新功能添加测试
 - 更新相关文档
+
+## 📄 许可证
+
+MIT License
+
+## 🤝 贡献
+
+欢迎贡献！请随时提交 Pull Request。
+
+## 📞 支持
+
+如果您遇到任何问题或有疑问，请：
+
+1. 查看[文档](./mcp-prompt.txt)
+2. 搜索现有的[问题](https://github.com/mater1996/sketch-mcp-server/issues)
+3. 如需要请创建新的问题

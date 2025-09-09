@@ -277,7 +277,3 @@ If you encounter any issues or have questions, please:
 1. Check the [documentation](./mcp-prompt.en.txt)
 2. Search existing [issues](https://github.com/mater1996/sketch-mcp-server/issues)
 3. Create a new issue if needed
-
----
-
-**Made with ❤️ for the design-to-code community**
