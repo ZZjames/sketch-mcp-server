@@ -25,10 +25,15 @@ export class McpServer {
 
   /**
    * 处理JSON-RPC请求
+   * 注意：对于 notification（如 notifications/initialized），processMethod 会返回 null，
+   * 此函数同样返回 null，由调用方（mcp-stdio）决定是否写回。
    */
-  async handleRequest(request: JsonRpcRequest): Promise<JsonRpcResponse> {
+  async handleRequest(request: JsonRpcRequest): Promise<JsonRpcResponse | null> {
     try {
       const result = await this.processMethod(request.method, request.params);
+      if (result === null) {
+        return null;
+      }
       return {
         jsonrpc: '2.0',
         id: request.id,
@@ -52,9 +57,15 @@ export class McpServer {
    */
   private async processMethod(method: string, params: any): Promise<any> {
     switch (method) {
-      case 'initialize':
+      case 'initialize': {
+        // 协议版本协商：客户端请求的版本若被支持则原样返回，否则退回到 2025-03-26
+        const requestedVersion = params?.protocolVersion || '2024-11-05';
+        const supportedVersions = ['2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25'];
+        const negotiatedVersion = supportedVersions.includes(requestedVersion)
+          ? requestedVersion
+          : '2025-03-26';
         return {
-          protocolVersion: '2024-11-05',
+          protocolVersion: negotiatedVersion,
           capabilities: {
             tools: {},
             prompts: {},
@@ -65,9 +76,11 @@ export class McpServer {
             version: '1.0.0'
           }
         };
+      }
 
       case 'notifications/initialized':
-        return {};
+        // notification 没有响应
+        return null;
 
       case 'ping':
         return {};

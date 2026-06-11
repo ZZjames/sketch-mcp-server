@@ -316,44 +316,47 @@ export class SketchConfigAnalyzer {
             if (nodeInfo.type === 'shapePath') {
                 const rawNode = this.getRawNode(nodeInfo.id);
                 const pathData = this.pathProcessor.extractPathFromNode(rawNode);
-                
+
                 if (pathData && this.pathProcessor.isValidPathData(pathData)) {
                     return this.svgRenderer.renderNodeAsSVG({
                         ...nodeInfo,
-                        pathData: pathData
+                        _pathData: pathData
                     });
                 }
             }
-            
+
             // 对于group类型，需要渲染子节点
             if (nodeInfo.type === 'group') {
                 const childRenderer = (childId: string) => {
                     const childInfo = this.getNodeInfo(childId);
                     if (!childInfo) return '';
-                    
+
                     if (childInfo.type === 'shapePath') {
                         const rawChild = this.getRawNode(childId);
                         const childPathData = this.pathProcessor.extractPathFromNode(rawChild);
-                        
+
                         if (childPathData && this.pathProcessor.isValidPathData(childPathData)) {
-                            return this.svgRenderer.generateShapePathSVG(childInfo, childPathData);
+                            return this.svgRenderer.generateShapePathSVG(
+                                { ...childInfo, _pathData: childPathData },
+                                childId.replace(/[^a-zA-Z0-9_-]/g, '_')
+                            );
                         }
                     }
-                    
+
                     // 对于其他类型的子节点，递归渲染
                     const childResult = this.renderNodeAsSVG(childInfo);
                     return childResult.svgContent ? childResult.svgContent.replace(/<\/?svg[^>]*>/g, '') : '';
                 };
-                
+
                 const groupSVG = this.svgRenderer.generateGroupSVG(nodeInfo, childRenderer);
                 return this.svgRenderer.renderNodeAsSVG({
                     ...nodeInfo,
                     customSVG: groupSVG
                 });
             }
-            
+
             return this.svgRenderer.renderNodeAsSVG(nodeInfo);
-            
+
         } catch (error: any) {
             return {
                 error: `Render failed: ${error.message}`,
@@ -393,22 +396,39 @@ export class SketchConfigAnalyzer {
 
     /**
      * 获取页面结构
+     * @param fields 仅返回这些字段（树形结构中 children 始终保留以维持层级）
      */
-    getPageStructure(pageId: string, includeDetails: boolean = true, maxDepth: number = 10): any {
+    getPageStructure(pageId: string, includeDetails: boolean = true, maxDepth: number = 10, fields?: string[]): any {
         const page = this.nodeIndexer.getNode(pageId);
         if (!page) return null;
-        
+
+        // When fields is provided, only include specified fields in each node
+        const filterFields = (result: any): any => {
+            if (!fields || !Array.isArray(fields) || fields.length === 0) return result;
+            const filtered: any = {};
+            for (const key of fields) {
+                if (key in result) {
+                    filtered[key] = result[key];
+                }
+            }
+            // Always preserve children for hierarchy
+            if (result.children) {
+                filtered.children = result.children;
+            }
+            return filtered;
+        };
+
         const buildStructure = (node: any, depth: number): any => {
             if (depth > maxDepth) return null;
-            
+
             const nodeId = node.id || node.do_objectID;
             const result: any = {
                 id: nodeId,
                 name: node.name || '',
                 type: node._class || 'unknown'
             };
-            
-            if (includeDetails) {
+
+            if (includeDetails && !fields) {
                 const nodeInfo = this.getNodeInfo(nodeId);
                 if (nodeInfo) {
                     result.position = nodeInfo.position;
@@ -416,7 +436,7 @@ export class SketchConfigAnalyzer {
                     result.isVisible = nodeInfo.isVisible;
                 }
             }
-            
+
             if (Array.isArray(node.layers) && node.layers.length > 0) {
                 result.children = [];
                 for (const child of node.layers) {
@@ -426,10 +446,10 @@ export class SketchConfigAnalyzer {
                     }
                 }
             }
-            
-            return result;
+
+            return filterFields(result);
         };
-        
+
         return buildStructure(page, 0);
     }
 
@@ -630,6 +650,188 @@ export class SketchConfigAnalyzer {
         };
 
         return filterNode(structure);
+    }
+
+    /**
+     * 获取页面中所有节点 ID，按类型分组返回
+     * @param pageId 页面 ID
+     * @param typeFilter 可选，限制只返回指定类型的 ID
+     */
+    getNodeIdList(pageId: string, typeFilter?: string[]): any {
+        if (!this.config || !this.config.document || !Array.isArray(this.config.document.pages)) {
+            return null;
+        }
+        const page = this.nodeIndexer.getNode(pageId);
+        if (!page) {
+            // Also try finding page from config directly
+            const configPage = this.config.document.pages.find((p: any) => (p.id || p.do_objectID) === pageId);
+            if (!configPage) return null;
+            return this._collectNodeIdsFromLayers(configPage, typeFilter, pageId);
+        }
+        return this._collectNodeIdsFromLayers(page, typeFilter, pageId);
+    }
+
+    private _collectNodeIdsFromLayers(page: any, typeFilter: string[] | undefined, pageId: string): any {
+        const groups: { [key: string]: string[] } = {};
+        const collectIds = (node: any) => {
+            const nodeId = node.id || node.do_objectID;
+            const nodeType = node._class || node.type || 'unknown';
+            if (nodeId) {
+                if (!typeFilter || typeFilter.length === 0 || typeFilter.includes(nodeType)) {
+                    if (!groups[nodeType]) {
+                        groups[nodeType] = [];
+                    }
+                    groups[nodeType].push(nodeId);
+                }
+            }
+            if (Array.isArray(node.layers)) {
+                for (const child of node.layers) {
+                    collectIds(child);
+                }
+            }
+        };
+        if (Array.isArray(page.layers)) {
+            for (const layer of page.layers) {
+                collectIds(layer);
+            }
+        }
+        const summary: { [key: string]: number } = {};
+        for (const [type, ids] of Object.entries(groups)) {
+            summary[type] = ids.length;
+        }
+        return {
+            pageId,
+            pageName: page.name || '',
+            groups,
+            summary,
+            totalIds: Object.values(groups).reduce((sum: number, arr: string[]) => sum + arr.length, 0)
+        };
+    }
+
+    /**
+     * 提取 bitmap 节点的 PNG 资源
+     * @param bitmapIds bitmap 节点 ID 列表
+     * @param sketchExtractDir sketch 解压目录（由 loadSketchConfigFromPath 时挂载到 config._extractDir）
+     */
+    extractBitmaps(bitmapIds: string[], sketchExtractDir: string | undefined): any {
+        if (!sketchExtractDir) {
+            return { error: 'No sketch extract directory available. Please load a .sketch file first.', bitmaps: [] };
+        }
+        const fs = require('fs');
+        const path = require('path');
+        const results: any[] = [];
+        for (const nodeId of bitmapIds) {
+            const node = this.nodeIndexer.getNode(nodeId);
+            if (!node) {
+                results.push({ nodeId, error: 'Node not found' });
+                continue;
+            }
+            if (node._class !== 'bitmap') {
+                results.push({ nodeId, name: node.name || '', error: 'Not a bitmap node' });
+                continue;
+            }
+            const ref = node.image && (node.image._ref || node.image.path);
+            if (!ref) {
+                results.push({ nodeId, name: node.name || '', error: 'No image reference' });
+                continue;
+            }
+            const imgPath = path.join(sketchExtractDir, ref.startsWith('images/') ? ref : 'images/' + ref);
+            if (!fs.existsSync(imgPath)) {
+                results.push({ nodeId, name: node.name || '', error: `Image file not found: ${ref}` });
+                continue;
+            }
+            try {
+                const buffer = fs.readFileSync(imgPath);
+                const base64 = buffer.toString('base64');
+                const ext = path.extname(imgPath).slice(1) || 'png';
+                results.push({
+                    nodeId,
+                    name: node.name || '',
+                    base64,
+                    mimeType: `image/${ext}`,
+                    size: buffer.length,
+                    fileName: path.basename(ref)
+                });
+            } catch (e: any) {
+                results.push({ nodeId, name: node.name || '', error: `Failed to read: ${e.message}` });
+            }
+        }
+        return {
+            bitmaps: results,
+            total: results.length,
+            successCount: results.filter((r: any) => !r.error).length
+        };
+    }
+
+    /**
+     * Extract SVG path data from shapePath nodes.
+     * Returns ready-to-use SVG path elements for code generation.
+     */
+    getShapePathData(nodeIds: string[]): any {
+        if (!this.hasConfig()) {
+            return { error: 'No Sketch file loaded', shapes: [] };
+        }
+        if (!Array.isArray(nodeIds)) {
+            return { error: 'nodeIds must be an array', shapes: [] };
+        }
+        const shapes: any[] = [];
+        for (const nodeId of nodeIds) {
+            const rawNode = this.getRawNode(nodeId);
+            if (!rawNode) {
+                shapes.push({ nodeId, error: 'Node not found' });
+                continue;
+            }
+            const pathData = this.pathProcessor.extractPathFromNode(rawNode);
+            if (!pathData || !this.pathProcessor.isValidPathData(pathData)) {
+                shapes.push({ nodeId, name: rawNode.name || '', error: 'No valid path data' });
+                continue;
+            }
+            const nodeInfo = this.getNodeInfo(nodeId);
+            const width = rawNode.frame?.width || 100;
+            const height = rawNode.frame?.height || 100;
+            const nodeIdClean = nodeId.replace(/[^a-zA-Z0-9_-]/g, '_');
+            // Build a minimal svgElement with the path data for direct use in code generation
+            const svgRenderer = this.svgRenderer;
+            const style = nodeInfo?.style;
+            let fillRef = 'currentColor';
+            let strokeColor = 'none';
+            let strokeWidth = 0;
+            let defs = '';
+            if (style && style.fills && style.fills.length > 0) {
+                const fillStyle = style.fills[0];
+                if (fillStyle.gradient && fillStyle.type > 0) {
+                    const gradId = `grad-${nodeIdClean}`;
+                    fillRef = `url(#${gradId})`;
+                    defs += svgRenderer.generateGradientDef(fillStyle.gradient, gradId);
+                } else {
+                    fillRef = fillStyle.color?.hex || 'currentColor';
+                }
+            }
+            if (style && style.borders && style.borders.length > 0) {
+                const border = style.borders[0];
+                strokeColor = border.color?.hex || 'none';
+                strokeWidth = border.thickness || 1;
+            }
+            const { filterAttr, defs: shadowDefs } = svgRenderer.buildShadowFilter(style, nodeIdClean);
+            const allDefs = defs + shadowDefs;
+            const svgElement = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">` +
+                (allDefs ? `<defs>${allDefs}</defs>` : '') +
+                `<path d="${pathData}" fill="${fillRef}" stroke="${strokeColor}" stroke-width="${strokeWidth}"${filterAttr}/>` +
+                `</svg>`;
+            shapes.push({
+                nodeId,
+                name: rawNode.name || '',
+                pathData,
+                viewBox: `0 0 ${width} ${height}`,
+                style: nodeInfo?.style,
+                svgElement
+            });
+        }
+        return {
+            shapes,
+            total: shapes.length,
+            successCount: shapes.filter((s: any) => !s.error).length
+        };
     }
 }
 

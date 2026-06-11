@@ -82,25 +82,33 @@ export function loadSketchConfigFromJsonFile(filePath: string): SketchConfig {
 
 /**
  * 从路径加载Sketch配置（统一入口）
+ *
+ * 加载来源是 .sketch / 目录时，会在返回的 config 上挂一个 _extractDir 字段，
+ * 供 extractBitmaps 工具读取原始 bitmap 资源文件。
  */
 export async function loadSketchConfigFromPath(inputPath: string): Promise<SketchConfig> {
   const abs = path.resolve(inputPath);
-  
+
   // 处理归档文件
   if (isFile(abs) && isSketchArchive(abs)) {
     const tempDir = await extractSketchArchive(abs);
-    return loadSketchConfigFromDirectory(tempDir);
+    const config = loadSketchConfigFromDirectory(tempDir);
+    // Save extract dir for extractBitmaps tool
+    (config as any)._extractDir = tempDir;
+    return config;
   }
-  
+
   // 处理目录
   if (isDirectory(abs)) {
-    return loadSketchConfigFromDirectory(abs);
+    const config = loadSketchConfigFromDirectory(abs);
+    (config as any)._extractDir = abs;
+    return config;
   }
-  
+
   // 处理JSON文件
   if (isFile(abs)) {
     return loadSketchConfigFromJsonFile(abs);
   }
-  
+
   throw new Error(`Path not found: ${inputPath}`);
 }

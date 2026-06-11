@@ -1,7 +1,7 @@
 {
-  "name": "sketch-mcp-server",
-  "version": "1.2.0",
-  "description": "A server for processing Sketch files and generating code using MCP tools.",
+  "name": "@szc-ft/sketch-mcp-server",
+  "version": "1.4.1",
+  "description": "A server for processing Sketch files and generating code using MCP tools (forked with stdio protocol fix).",
   "main": "dist/server.js",
   "bin": {
     "sketch-mcp-server": "./dist/mcp-stdio.js"
@@ -9,7 +9,7 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "start:mcp": "ts-node src/mcp-stdio.ts",
-    "build": "tsc && chmod +x dist/mcp-stdio.js",
+    "build": "tsc && node scripts/copy-assets.js && chmod +x dist/mcp-stdio.js",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "restart": "bash scripts/restart.sh",
@@ -57,15 +57,22 @@
     "sketch-analysis"
   ],
   "author": "mater1996",
+  "contributors": [
+    "szc-ft"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mater1996/sketch-mcp-server"
+    "url": "https://github.com/ZZjames/sketch-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/mater1996/sketch-mcp-server/issue"
+    "url": "https://github.com/ZZjames/sketch-mcp-server/issues"
   },
-  "homepage": "https://github.com/mater1996/sketch-mcp-server",
+  "homepage": "https://github.com/ZZjames/sketch-mcp-server#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "http://maven.smartcitysz.work/repository/szc-ft-component/"
+  },
   "engines": {
     "node": ">=16.0.0"
   }

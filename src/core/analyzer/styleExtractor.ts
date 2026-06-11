@@ -37,11 +37,16 @@ export class StyleExtractor {
         if (Array.isArray(style.fills)) {
             for (const fill of style.fills) {
                 if (fill.isEnabled) {
-                    result.fills.push({
+                    const fillData: any = {
                         type: fill.fillType || 0,
                         color: this.extractColor(fill.color),
                         opacity: fill.contextSettings?.opacity || 1
-                    });
+                    };
+                    // 渐变填充：提取 gradient stops/from/to
+                    if (fill.fillType > 0 && fill.gradient) {
+                        fillData.gradient = this.extractGradient(fill.gradient);
+                    }
+                    result.fills.push(fillData);
                 }
             }
         }
@@ -91,6 +96,47 @@ export class StyleExtractor {
         }
 
         return result;
+    }
+
+    /**
+     * 提取渐变数据
+     * @param gradient Sketch gradient object
+     * @returns 提取后的 gradient（含 stops/from/to/gradientType/elipseLength）
+     */
+    extractGradient(gradient: any): any {
+        if (!gradient) return null;
+        const result: any = {
+            gradientType: gradient.gradientType || 0, // 0=linear, 1=radial, 2=angular
+            from: this.parsePointString(gradient.from),
+            to: this.parsePointString(gradient.to),
+            stops: []
+        };
+        if (Array.isArray(gradient.stops)) {
+            for (const stop of gradient.stops) {
+                result.stops.push({
+                    position: stop.position || 0,
+                    color: this.extractColor(stop.color)
+                });
+            }
+        }
+        // radial gradient extra
+        if (gradient.gradientType === 1 && gradient.elipseLength) {
+            result.elipseLength = gradient.elipseLength;
+        }
+        return result;
+    }
+
+    /**
+     * 解析 Sketch 坐标字符串 "{x, y}" → {x, y}
+     */
+    parsePointString(str: any): { x: number; y: number } {
+        if (!str) return { x: 0, y: 0 };
+        if (typeof str === 'object') return { x: str.x || 0, y: str.y || 0 };
+        const coords = String(str).match(/([\d.-]+)/g);
+        if (coords && coords.length >= 2) {
+            return { x: parseFloat(coords[0]), y: parseFloat(coords[1]) };
+        }
+        return { x: 0, y: 0 };
     }
 
     /**

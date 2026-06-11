@@ -1337,4 +1337,108 @@ export class SketchConfigAnalyzer {
             includeDetails
         };
     }
+
+    /**
+     * 获取页面中所有节点 ID，按类型分组返回
+     * @param pageId 页面 ID
+     * @param typeFilter 可选，限制只返回指定类型的 ID（如 ['text', 'rectangle']）
+     */
+    getNodeIdList(pageId: string, typeFilter?: string[]): any {
+        if (!this.config || !this.config.document || !Array.isArray(this.config.document.pages)) {
+            return null;
+        }
+        const page = this.config.document.pages.find((p: any) => (p.id || p.do_objectID) === pageId);
+        if (!page) {
+            return null;
+        }
+        const groups: { [key: string]: string[] } = {};
+        const collectIds = (node: any) => {
+            const nodeId = node.id || node.do_objectID;
+            const nodeType = node._class || node.type || 'unknown';
+            if (nodeId) {
+                if (!typeFilter || typeFilter.length === 0 || typeFilter.includes(nodeType)) {
+                    if (!groups[nodeType]) {
+                        groups[nodeType] = [];
+                    }
+                    groups[nodeType].push(nodeId);
+                }
+            }
+            if (Array.isArray(node.layers)) {
+                for (const child of node.layers) {
+                    collectIds(child);
+                }
+            }
+        };
+        if (Array.isArray(page.layers)) {
+            for (const layer of page.layers) {
+                collectIds(layer);
+            }
+        }
+        const summary: { [key: string]: number } = {};
+        for (const [type, ids] of Object.entries(groups)) {
+            summary[type] = ids.length;
+        }
+        return {
+            pageId,
+            pageName: page.name || '',
+            groups,
+            summary,
+            totalIds: Object.values(groups).reduce((sum: number, arr: string[]) => sum + arr.length, 0)
+        };
+    }
+
+    /**
+     * 提取 bitmap 节点的 PNG 资源
+     * @param bitmapIds bitmap 节点 ID 列表
+     * @param sketchExtractDir sketch 解压目录（由 loadSketchByPath 时设置）
+     */
+    extractBitmaps(bitmapIds: string[], sketchExtractDir: string | undefined): any {
+        if (!sketchExtractDir) {
+            return { error: 'No sketch extract directory available. Please load a .sketch file first.', bitmaps: [] };
+        }
+        const fs = require('fs');
+        const path = require('path');
+        const results: any[] = [];
+        for (const nodeId of bitmapIds) {
+            const node = this.idToNode.get(nodeId);
+            if (!node) {
+                results.push({ nodeId, error: 'Node not found' });
+                continue;
+            }
+            if (node._class !== 'bitmap') {
+                results.push({ nodeId, name: node.name || '', error: 'Not a bitmap node' });
+                continue;
+            }
+            const ref = node.image && (node.image._ref || node.image.path);
+            if (!ref) {
+                results.push({ nodeId, name: node.name || '', error: 'No image reference' });
+                continue;
+            }
+            const imgPath = path.join(sketchExtractDir, ref.startsWith('images/') ? ref : 'images/' + ref);
+            if (!fs.existsSync(imgPath)) {
+                results.push({ nodeId, name: node.name || '', error: `Image file not found: ${ref}` });
+                continue;
+            }
+            try {
+                const buffer = fs.readFileSync(imgPath);
+                const base64 = buffer.toString('base64');
+                const ext = path.extname(imgPath).slice(1) || 'png';
+                results.push({
+                    nodeId,
+                    name: node.name || '',
+                    base64,
+                    mimeType: `image/${ext}`,
+                    size: buffer.length,
+                    fileName: path.basename(ref)
+                });
+            } catch (e: any) {
+                results.push({ nodeId, name: node.name || '', error: `Failed to read: ${e.message}` });
+            }
+        }
+        return {
+            bitmaps: results,
+            total: results.length,
+            successCount: results.filter((r: any) => !r.error).length
+        };
+    }
 }

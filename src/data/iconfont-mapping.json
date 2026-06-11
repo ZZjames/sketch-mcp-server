@@ -1,0 +1,77 @@
+{
+  "libraries": {
+    "newFont": {
+      "description": "新字体图标库，命名规范: icon-{拼音}",
+      "icons": {
+        "icon-biao": { "keywords": ["表", "表格", "table", "biao"], "fallback": "antd TableOutlined" },
+        "icon-wenjian": { "keywords": ["文件", "文档", "file", "wenjian"], "fallback": "antd FileOutlined" },
+        "icon-jiekou": { "keywords": ["接口", "api", "jiekou"], "fallback": "antd ApiOutlined" },
+        "icon-shujv": { "keywords": ["数据", "数据库", "data", "shuju", "shujv"], "fallback": "antd DatabaseOutlined" },
+        "icon-yonghu": { "keywords": ["用户", "人员", "user", "yonghu"], "fallback": "antd UserOutlined" },
+        "icon-shezhi": { "keywords": ["设置", "配置", "setting", "shezhi"], "fallback": "antd SettingOutlined" },
+        "icon-sousuo": { "keywords": ["搜索", "查询", "search", "sousuo"], "fallback": "antd SearchOutlined" },
+        "icon-caidan": { "keywords": ["菜单", "导航", "menu", "caidan"], "fallback": "antd MenuOutlined" },
+        "icon-tongzhi": { "keywords": ["通知", "消息", "notice", "tongzhi"], "fallback": "antd BellOutlined" },
+        "icon-rizhi": { "keywords": ["日志", "记录", "log", "rizhi"], "fallback": "antd FileTextOutlined" },
+        "icon-guanli": { "keywords": ["管理", "guanli"], "fallback": "antd ControlOutlined" },
+        "icon-jiankong": { "keywords": ["监控", "监视", "monitor", "jiankong"], "fallback": "antd EyeOutlined" },
+        "icon-anquan": { "keywords": ["安全", "security", "anquan"], "fallback": "antd SafetyCertificateOutlined" },
+        "icon-baobiao": { "keywords": ["报表", "报告", "report", "baobiao"], "fallback": "antd BarChartOutlined" },
+        "icon-tubiao": { "keywords": ["图表", "图形", "chart", "tubiao"], "fallback": "antd PieChartOutlined" },
+        "icon-renwu": { "keywords": ["任务", "task", "renwu"], "fallback": "antd ScheduleOutlined" },
+        "icon-liucheng": { "keywords": ["流程", "工作流", "workflow", "liucheng"], "fallback": "antd BranchesOutlined" },
+        "icon-fuwu": { "keywords": ["服务", "service", "fuwu"], "fallback": "antd CloudServerOutlined" },
+        "icon-jiaose": { "keywords": ["角色", "role", "jiaose"], "fallback": "antd TeamOutlined" },
+        "icon-quanxian": { "keywords": ["权限", "permission", "quanxian"], "fallback": "antd LockOutlined" },
+        "icon-xitong": { "keywords": ["系统", "system", "xitong"], "fallback": "antd DesktopOutlined" },
+        "icon-peizhi": { "keywords": ["配置", "config", "peizhi"], "fallback": "antd ToolOutlined" },
+        "icon-cunchu": { "keywords": ["存储", "storage", "cunchu"], "fallback": "antd HddOutlined" },
+        "icon-wangluo": { "keywords": ["网络", "network", "wangluo"], "fallback": "antd GlobalOutlined" },
+        "icon-fenxi": { "keywords": ["分析", "analysis", "fenxi"], "fallback": "antd FundOutlined" },
+        "icon-moxing": { "keywords": ["模型", "model", "moxing"], "fallback": "antd BlockOutlined" },
+        "icon-bianmu": { "keywords": ["编目", "目录", "catalog", "bianmu"], "fallback": "antd AppstoreOutlined" },
+        "icon-zhiwu": { "keywords": ["职务", "职位", "zhiwu"], "fallback": "antd IdcardOutlined" },
+        "icon-zuzhi": { "keywords": ["组织", "部门", "org", "zuzhi"], "fallback": "antd ApartmentOutlined" },
+        "icon-bumen": { "keywords": ["部门", "department", "bumen"], "fallback": "antd ApartmentOutlined" },
+        "icon-xiangmu": { "keywords": ["项目", "project", "xiangmu"], "fallback": "antd ProjectOutlined" },
+        "icon-ziyuan": { "keywords": ["资源", "resource", "ziyuan"], "fallback": "antd CloudOutlined" },
+        "icon-huanjing": { "keywords": ["环境", "env", "huanjing"], "fallback": "antd GlobalOutlined" },
+        "icon-jigou": { "keywords": ["机构", "institution", "jigou"], "fallback": "antd BankOutlined" },
+        "icon-kanban": { "keywords": ["看板", "仪表盘", "dashboard", "kanban"], "fallback": "antd DashboardOutlined" },
+        "icon-zanting": { "keywords": ["暂停", "stop", "zanting"], "fallback": "antd PauseCircleOutlined" },
+        "icon-qidong": { "keywords": ["启动", "start", "qidong"], "fallback": "antd PlayCircleOutlined" },
+        "icon-shanchu": { "keywords": ["删除", "delete", "shanchu"], "fallback": "antd DeleteOutlined" },
+        "icon-xiugai": { "keywords": ["修改", "编辑", "edit", "xiugai"], "fallback": "antd EditOutlined" },
+        "icon-xinzeng": { "keywords": ["新增", "添加", "add", "xinzeng"], "fallback": "antd PlusOutlined" },
+        "icon-daochu": { "keywords": ["导出", "export", "daochu"], "fallback": "antd ExportOutlined" },
+        "icon-daoru": { "keywords": ["导入", "import", "daoru"], "fallback": "antd ImportOutlined" },
+        "icon-shangchuan": { "keywords": ["上传", "upload", "shangchuan"], "fallback": "antd UploadOutlined" },
+        "icon-xiazai": { "keywords": ["下载", "download", "xiazai"], "fallback": "antd DownloadOutlined" }
+      }
+    },
+    "UIiconfont": {
+      "description": "UI图标库",
+      "icons": {}
+    },
+    "szciconfont": {
+      "description": "SZC图标库",
+      "icons": {}
+    },
+    "technologyPlatforms": {
+      "description": "技术平台图标库",
+      "icons": {}
+    },
+    "multiGateway": {
+      "description": "多网关图标库",
+      "icons": []
+    },
+    "openPlatform": {
+      "description": "开放平台图标库",
+      "icons": {}
+    },
+    "stPlatform": {
+      "description": "ST平台图标库",
+      "icons": {}
+    }
+  }
+}
