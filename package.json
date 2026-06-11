@@ -1,6 +1,6 @@
 {
   "name": "@szc-ft/sketch-mcp-server",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "A server for processing Sketch files and generating code using MCP tools (forked with stdio protocol fix).",
   "main": "dist/server.js",
   "bin": {
@@ -71,7 +71,7 @@
   "homepage": "https://github.com/ZZjames/sketch-mcp-server#readme",
   "publishConfig": {
     "access": "public",
-    "registry": "http://maven.smartcitysz.work/repository/szc-ft-component/"
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=16.0.0"

@@ -58,12 +58,18 @@ export class ToolManager {
             },
             {
                 name: 'queryNodes',
-                description: 'Query nodes with filtering. Combines listNodes + listNodesByPage + findNodesByName into one tool.',
+                description: 'Query nodes with filtering. Combines listNodes + listNodesByPage + findNodesByName into one tool. The `type` field accepts a string OR an array of strings (e.g., ["text","rectangle","group"]) to fetch multiple node types in one call.',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         pageId: { type: 'string', description: 'Optional page ID to scope search. Omit for global search.' },
-                        type: { type: 'string', description: 'Filter by node type (e.g., "text", "rectangle", "artboard")' },
+                        type: {
+                            oneOf: [
+                                { type: 'string' },
+                                { type: 'array', items: { type: 'string' } }
+                            ],
+                            description: 'Filter by node type (e.g., "text", "rectangle", "artboard"). Pass an array to match multiple types: ["text","rectangle","group"].'
+                        },
                         name: { type: 'string', description: 'Fuzzy name match (replaces findNodesByName)' },
                         nameContains: { type: 'string', description: 'Name contains this substring' },
                         limit: { type: 'number', description: 'Max results to return', default: 50 },
@@ -73,7 +79,7 @@ export class ToolManager {
             },
             {
                 name: 'getNodeInfo',
-                description: 'Get detailed information about a node by its ID (includes position, size, style, text, shape info)',
+                description: 'Get detailed information about a node by its ID. Returns id, name, type, position, size, style (fills/borders/shadows/innerShadows for ALL node types including rectangle/group), parent ({id,name,type} for ancestry lookup - use this for element grouping, NOT x/y coordinates), and type-specific fields (text/shape/image/symbol/children).',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -84,7 +90,7 @@ export class ToolManager {
             },
             {
                 name: 'getMultipleNodeInfo',
-                description: 'Get detailed information for multiple nodes in a single call. Auto-batches in groups of 100.',
+                description: 'Get detailed information for multiple nodes in a single call. Auto-batches in groups of 100. Each returned node includes parent ({id,name,type}) for ancestry-based grouping.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -183,11 +189,11 @@ export class ToolManager {
             },
             {
                 name: 'matchIconFromName',
-                description: 'Match node names to iconfont icon library. Returns matched icons and fallback suggestions.',
+                description: 'Match node names to iconfont icon library. Uses a scoring system that returns Top-3 candidates per name. Recognises compound semantics (e.g. "folder + add" → FolderAddOutlined) to avoid generic-keyword shadowing (e.g. "新增" alone → PlusOutlined). Returned shape: { results: [{nodeName, top3:[{source,score,iconType?,antdIcon?,matchedBy,rationale?}], bestMatch}], matchedIcons (Top-1 backward-compat), unmatched, recommendFallback }.',
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        nodeNames: { type: 'array', items: { type: 'string' }, description: 'Node names to match (e.g., ["表 icon", "文件 icon"])' },
+                        nodeNames: { type: 'array', items: { type: 'string' }, description: 'Node names to match (e.g., ["表 icon", "编组11备份"])' },
                         library: { type: 'string', description: 'Iconfont library name', default: 'newFont' }
                     },
                     required: ['nodeNames']
@@ -250,7 +256,7 @@ export class ToolManager {
                     return { page: pageInfo, nodes: result || [], total: (result as any[]).length || 0, limit, offset, mode: 'pageQuery' };
                 }
                 // Global query (replaces listNodes)
-                const result = this.analyzer.listNodes(type, limit, offset);
+                const result = this.analyzer.listNodes(limit, type, nameContains, offset);
                 return { nodes: result || [], total: (result as any[]).length || 0, limit, offset, mode: 'globalQuery' };
             }
             case 'getNodeInfo':

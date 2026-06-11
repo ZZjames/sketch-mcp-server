@@ -66,7 +66,7 @@ export class SketchConfigAnalyzer {
     /**
      * 列出节点
      */
-    listNodes(limit: number = 50, type?: string, nameContains?: string, offset: number = 0) {
+    listNodes(limit: number = 50, type?: string | string[], nameContains?: string, offset: number = 0) {
         return this.nodeIndexer.listNodes(limit, type, nameContains, offset);
     }
 
@@ -81,7 +81,7 @@ export class SketchConfigAnalyzer {
     /**
      * 根据页面列出节点
      */
-    listNodesByPage(pageId: string, limit: number = 50, type?: string, nameContains?: string, offset: number = 0) {
+    listNodesByPage(pageId: string, limit: number = 50, type?: string | string[], nameContains?: string, offset: number = 0) {
         const page = this.nodeIndexer.getNode(pageId);
         if (!page || !Array.isArray(page.layers)) {
             return [];
@@ -90,18 +90,19 @@ export class SketchConfigAnalyzer {
         const results: any[] = [];
         let count = 0;
         let skipped = 0;
+        const typeSet = type ? new Set(Array.isArray(type) ? type : [type]) : null;
 
         const processLayers = (layers: any[]) => {
             for (const layer of layers) {
                 if (count >= limit) return;
-                
+
                 const layerId = layer.id || layer.do_objectID;
                 if (!layerId) continue;
                 
                 const nodeInfo = this.getNodeInfo(layerId);
                 if (!nodeInfo) continue;
-                
-                if (type && nodeInfo.type !== type) {
+
+                if (typeSet && !typeSet.has(nodeInfo.type)) {
                     if (Array.isArray(layer.layers)) {
                         processLayers(layer.layers);
                     }
@@ -145,7 +146,21 @@ export class SketchConfigAnalyzer {
      */
     getNodeInfo(nodeId: string) {
         const node = this.nodeIndexer.getNode(nodeId);
-        return this.nodeInfoExtractor.extractNodeInfo(node);
+        const info = this.nodeInfoExtractor.extractNodeInfo(node);
+        if (info) {
+            const parentId = this.nodeIndexer.getParentId(nodeId);
+            if (parentId) {
+                const parentNode = this.nodeIndexer.getNode(parentId);
+                info.parent = {
+                    id: parentId,
+                    name: parentNode?.name || '',
+                    type: parentNode?._class || 'unknown'
+                };
+            } else {
+                info.parent = null;
+            }
+        }
+        return info;
     }
 
     /**

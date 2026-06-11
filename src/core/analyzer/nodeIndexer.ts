@@ -150,13 +150,14 @@ export class NodeIndexer {
     /**
      * 列出所有节点
      */
-    listNodes(limit: number = 50, type?: string, nameContains?: string, offset: number = 0): any[] {
+    listNodes(limit: number = 50, type?: string | string[], nameContains?: string, offset: number = 0): any[] {
         const results: any[] = [];
         let count = 0;
         let skipped = 0;
-        
+        const typeSet = type ? new Set(Array.isArray(type) ? type : [type]) : null;
+
         for (const [nodeId, node] of this.idToNode) {
-            if (type && this.getNodeType(node) !== type) {
+            if (typeSet && !typeSet.has(this.getNodeType(node))) {
                 continue;
             }
             
